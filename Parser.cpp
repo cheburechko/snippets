@@ -145,6 +145,10 @@ void Parser::parse(const std::string& text, SnippetStorage& snippets,
 		}
 	}
 
+	for (auto termPair : terms) {
+		termPair.second.calculateScore(snippets.size());
+	}
+
 	for (auto snipObj : snippets) {
 		snipObj.getTF().applyIDF(terms);
 	}

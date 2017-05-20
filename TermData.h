@@ -17,14 +17,14 @@ namespace snippets {
 class TermData {
 public:
 	typedef std::multimap<double, unsigned, std::greater<double>> SnipsByScore;
-	typedef SnipsByScore::const_iterator TermDataIterator;
+	typedef SnipsByScore::const_iterator iterator;
 	TermData(Term term);
 
 	void addSnippet(unsigned snippet, double TF);
 	void calculateScore(unsigned totalSnippets);
 
-	TermDataIterator begin() const;
-	TermDataIterator end() const;
+	iterator begin() const;
+	iterator end() const;
 
 	virtual ~TermData();
 
@@ -35,6 +35,7 @@ public:
 private:
 	Term term;
 	SnipsByScore snippetsByScore;
+	std::unordered_map<unsigned, double> snippetsTF;
 	double IDF;
 };
 

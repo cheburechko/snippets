@@ -17,18 +17,23 @@ TermData::TermData(Term term) :
 }
 
 void TermData::addSnippet(unsigned snippet, double TF) {
-	snippetsByScore.emplace(TF, snippet);
+	snippetsTF[snippet] = TF;
 }
 
 void TermData::calculateScore(unsigned totalSnippets) {
-	IDF = log(double(totalSnippets) / snippetsByScore.size());
+	IDF = log(double(totalSnippets) / double(snippetsTF.size()));
+	snippetsByScore.clear();
+	for (auto pair : snippetsTF) {
+		snippetsByScore.emplace(pair.second*IDF, pair.first);
+	}
+
 }
 
-TermData::TermDataIterator TermData::begin() const {
+TermData::iterator TermData::begin() const {
 	return snippetsByScore.cbegin();
 }
 
-TermData::TermDataIterator TermData::end() const {
+TermData::iterator TermData::end() const {
 	return snippetsByScore.cend();
 }
 
