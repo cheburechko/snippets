@@ -10,9 +10,11 @@
 
 #include <string>
 #include <vector>
+#include <unordered_set>
 
 typedef std::string Term;
 typedef std::vector<Term> TermBag;
+typedef std::unordered_set<Term> TermSet;
 
 
 #endif /* TERM_H_ */

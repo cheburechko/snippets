@@ -11,27 +11,25 @@
 namespace snippets {
 
 TermData::TermData(Term term) :
-		term(term)
+		term(term),
+		IDF(0)
 {
 }
 
 void TermData::addSnippet(unsigned snippet, double TF) {
-	snippetsTF[snippet] = TF;
+	snippetsByScore.emplace(TF, snippet);
 }
 
 void TermData::calculateScore(unsigned totalSnippets) {
-	double IDF = log(double(totalSnippets) / snippetsTF.size());
-	for (auto entry : snippetsTF) {
-		snippetsByScore.emplace(IDF * entry.second, entry.first);
-	}
+	IDF = log(double(totalSnippets) / snippetsByScore.size());
 }
 
-TermData::TermDataIterator TermData::begin() {
-	return snippetsByScore.begin();
+TermData::TermDataIterator TermData::begin() const {
+	return snippetsByScore.cbegin();
 }
 
-TermData::TermDataIterator TermData::end() {
-	return snippetsByScore.end();
+TermData::TermDataIterator TermData::end() const {
+	return snippetsByScore.cend();
 }
 
 TermData::~TermData() {

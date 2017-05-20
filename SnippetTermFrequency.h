@@ -15,13 +15,16 @@ namespace snippets {
 
 class SnippetTermFrequency {
 private:
-	std::unordered_map<Term, double> data;
+	std::unordered_map<Term, double> rawTF, TF_IDF;
 	unsigned total;
 
 public:
-	SnippetTermFrequency(TermBag bag);
+	SnippetTermFrequency(const TermBag& bag);
 
-	double getTF(Term term) const;
+	double getTF(const Term& term) const;
+	double getTF_IDF(const Term& term) const;
+	void applyIDF(const TermDatabase& terms);
+	double score(const TermSet& termSet) const;
 
 	virtual ~SnippetTermFrequency();
 };
