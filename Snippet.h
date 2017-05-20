@@ -20,7 +20,7 @@ public:
 	Snippet(std::string snippet, TermBag bag);
 
 	const std::string& getSnippet();
-	const SnippetTermFrequency& getTF();
+	SnippetTermFrequency& getTF();
 
 	virtual ~Snippet();
 };

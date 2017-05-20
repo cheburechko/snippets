@@ -19,7 +19,7 @@ const std::string& Snippet::getSnippet() {
 	return snippet;
 }
 
-const SnippetTermFrequency& Snippet::getTF() {
+SnippetTermFrequency& Snippet::getTF() {
 	return TF;
 }
 
