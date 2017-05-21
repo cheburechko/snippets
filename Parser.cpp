@@ -57,6 +57,8 @@ void Parser::parse(const std::string& text, SnippetStorage& snippets,
 	auto sentences_begin = std::sregex_iterator(text.cbegin(), text.cend(), sentenceRegex);
 	auto sentences_end = std::sregex_iterator();
 
+	unsigned termsTotal = 0;
+
 	for (std::sregex_iterator sentence = sentences_begin;
 		 sentence != sentences_end;
 		 ++sentence
@@ -69,34 +71,42 @@ void Parser::parse(const std::string& text, SnippetStorage& snippets,
 		}
 		accumulatedSnippet += snippet;
 		accumulatedBag.insert(accumulatedBag.end(), bag.begin(), bag.end());
-		if (accumulatedBag.size() < minTermsInSnippet) {
-			continue;
+		if (accumulatedBag.size() >= minTermsInSnippet) {
+			addSnippet(accumulatedBag, accumulatedSnippet, snippets, terms, termsTotal);
 		}
-
-		Snippet snipObj = Snippet(accumulatedSnippet, accumulatedBag);
-		snippets.push_back(snipObj);
-
-		TermSet set(accumulatedBag.begin(), accumulatedBag.end());
-		const SnippetTermFrequency& TF = snipObj.getTF();
-		for (Term term : set) {
-			auto termData = terms.find(term);
-			if (termData == terms.end()) {
-				termData = terms.emplace(term, TermData(term)).first;
-			}
-			termData->second.addSnippet(snippets.size()-1, TF.getTF(term));
-		}
-
-		accumulatedBag.clear();
-		accumulatedSnippet.clear();
+	}
+	if (accumulatedBag.size() > 0) {
+		addSnippet(accumulatedBag, accumulatedSnippet, snippets, terms, termsTotal);
 	}
 
 	for (auto& termPair : terms) {
-		termPair.second.calculateScore(snippets.size());
+		termPair.second.calculateScore(termsTotal);
 	}
 
 	for (auto& snipObj : snippets) {
 		snipObj.getTF().applyIDF(terms);
 	}
+}
+
+void Parser::addSnippet(TermBag& bag, std::string& snippet,
+		SnippetStorage& snippets, TermDatabase& terms,
+		unsigned & termsTotal) {
+	Snippet snipObj = Snippet(snippet, bag);
+	snippets.push_back(snipObj);
+
+	TermSet set(bag.begin(), bag.end());
+	const SnippetTermFrequency& TF = snipObj.getTF();
+	for (Term term : set) {
+		auto termData = terms.find(term);
+		if (termData == terms.end()) {
+			termData = terms.emplace(term, TermData(term)).first;
+		}
+		termData->second.addSnippet(snippets.size()-1, TF.getTF(term), TF.getCount(term));
+	}
+
+	termsTotal += bag.size();
+	bag.clear();
+	snippet.clear();
 }
 
 Parser::~Parser() {

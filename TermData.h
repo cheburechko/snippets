@@ -20,7 +20,7 @@ public:
 	typedef SnipsByScore::const_iterator iterator;
 	TermData(Term term);
 
-	void addSnippet(unsigned snippet, double TF);
+	void addSnippet(unsigned snippet, double TF, unsigned count);
 	void calculateScore(unsigned totalSnippets);
 
 	iterator begin() const;
@@ -37,6 +37,7 @@ private:
 	SnipsByScore snippetsByScore;
 	std::unordered_map<unsigned, double> snippetsTF;
 	double IDF;
+	unsigned count;
 };
 
 typedef std::unordered_map<Term, TermData> TermDatabase;

@@ -36,7 +36,7 @@ int main(int argc, char* argv[]) {
 	std::ofstream termsOutput("terms.txt");
 	if (termsOutput) {
 		for (auto pair : terms) {
-			termsOutput << pair.first << '\n';
+			termsOutput << pair.first << ' ' << pair.second.getIDF() << '\n';
 		}
 	}
 	termsOutput.close();

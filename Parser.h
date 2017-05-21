@@ -19,6 +19,9 @@ private:
 	unsigned minTermsInSnippet;
 
 	static const std::regex sentenceRegex, termRegex;
+
+	void addSnippet(TermBag& bag, std::string& snippet, SnippetStorage& snippets,
+			TermDatabase& terms, unsigned& termsTotal);
 public:
 	Parser(unsigned minTermsInSnippet = 15);
 

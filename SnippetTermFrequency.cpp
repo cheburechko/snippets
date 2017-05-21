@@ -11,13 +11,11 @@ namespace snippets {
 
 SnippetTermFrequency::SnippetTermFrequency(const TermBag& bag) {
 	total = bag.size();
-	double step = 1. / total;
 	for (Term term : bag) {
-		if (rawTF.find(term) != rawTF.end()) {
-			rawTF[term] += step;
-		} else {
-			rawTF[term] = step;
-		}
+		rawCounts[term]++;
+	}
+	for (Term term : bag) {
+		rawTF[term] = double(rawCounts[term]) / double(total);
 	}
 }
 
@@ -60,3 +58,10 @@ SnippetTermFrequency::~SnippetTermFrequency() {
 
 }
 
+unsigned snippets::SnippetTermFrequency::getCount(const Term& term) const {
+	auto x = rawCounts.find(term);
+	if (x == rawCounts.end()) {
+		return 0;
+	}
+	return x -> second;
+}
