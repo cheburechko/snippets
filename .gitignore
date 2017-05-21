@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+
+# Other
+main
+test
+snippets.txt
+terms.txt
