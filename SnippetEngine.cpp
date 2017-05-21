@@ -7,6 +7,7 @@
 
 #include "SnippetEngine.h"
 #include <chrono>
+#include <iostream>
 
 namespace snippets {
 
@@ -14,7 +15,10 @@ SnippetEngine::SnippetEngine(SnippetStorage& snippets, TermDatabase& terms) :
 	snippets(snippets),
 	terms(terms),
 	bestPossibleScore(0),
-	bestScore(0)
+	bestScore(0),
+	analyzedSnippets(snippets.size()),
+	snippetsWithMostMatches(snippets.size()),
+	queryCounter(0)
 {
 }
 
@@ -23,6 +27,7 @@ SnippetEngine::Result SnippetEngine::getSnippet(const std::string& query) {
 	high_resolution_clock::time_point t1 = high_resolution_clock::now();
 
 	SnippetEngine::Result result;
+	queryCounter++;
 
 	prepareQuery(query);
 	calculateBestPossibleScore();
@@ -44,13 +49,12 @@ void SnippetEngine::prepareQuery(const std::string& query) {
 	queryTerms = parser.getTermSet(query);
 	queryTermData.clear();
 	queryTermDataEnds.clear();
-	analyzedSnippets.clear();
 
-	std::unordered_map<unsigned, unsigned> snippetMatchCount;
+	std::unordered_map<unsigned, unsigned> snippetMatchCount(snippets.size());
 	unsigned maxTermCount = 0;
 
 	for (Term term : queryTerms) {
-		auto termData = terms.find(term);
+		const auto& termData = terms.find(term);
 		if (termData == terms.end()) {
 			continue;
 		}
@@ -63,10 +67,9 @@ void SnippetEngine::prepareQuery(const std::string& query) {
 		queryTermDataEnds.push_back(termData->second.end());
 	}
 
-	snippetsWithMostMatches.clear();
-	for (auto snipMatchCounts: snippetMatchCount) {
-		if (snipMatchCounts.second == maxTermCount) {
-			snippetsWithMostMatches.emplace(snipMatchCounts.first);
+	for (auto& snipMatchCount : snippetMatchCount) {
+		if (snipMatchCount.second == maxTermCount) {
+			snippetsWithMostMatches[snipMatchCount.first] = queryCounter;
 		}
 	}
 
@@ -90,7 +93,7 @@ void SnippetEngine::rankNextSnippet() {
 		return;
 	}
 	Snippet& snippet = snippets.at(snippetID);
-	analyzedSnippets.emplace(snippetID);
+	analyzedSnippets[snippetID] = queryCounter;
 	double score = snippet.getTF().score(queryTerms);
 	if (score > bestScore) {
 		bestScore = score;
@@ -121,8 +124,8 @@ void SnippetEngine::selectNextBextTerm() {
 }
 
 bool SnippetEngine::isSnippetValid(unsigned snippetID) {
-	return analyzedSnippets.find(snippetID) == analyzedSnippets.end() &&
-			snippetsWithMostMatches.find(snippetID) != snippetsWithMostMatches.end();
+	return analyzedSnippets[snippetID] != queryCounter &&
+		   snippetsWithMostMatches[snippetID] == queryCounter;
 }
 
 SnippetEngine::~SnippetEngine() {

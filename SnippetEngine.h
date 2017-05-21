@@ -22,11 +22,13 @@ private:
 		std::string snippet;
 		long time;
 		double score;
+		unsigned matches;
 	};
 
 	std::vector<TermData::iterator> queryTermData, queryTermDataEnds;
 	TermSet queryTerms;
-	std::unordered_set<unsigned> analyzedSnippets, snippetsWithMostMatches;
+	std::vector<unsigned> analyzedSnippets, snippetsWithMostMatches;
+	unsigned queryCounter;
 	double bestScore, bestPossibleScore;
 	std::string bestSnippet;
 	std::multimap<double, unsigned, std::greater<double>> termRank;
