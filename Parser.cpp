@@ -20,14 +20,15 @@ const std::unordered_set<char> Parser::delimiters = {
 		'^', '\`', '{', '}', '|', '~', ' ', '\t', '\r', '\n', '.', '!', '?'
 };
 
-Parser::Parser() :
+Parser::Parser(unsigned minTermsInSnippet) :
 	textPos(0),
 	snippetPos(0),
 	snippet(""),
 	term(""),
 	finishedSnippet(false),
 	finishedText(false),
-	text(nullptr)
+	text(nullptr),
+	minTermsInSnippet(minTermsInSnippet)
 {
 }
 
@@ -125,17 +126,26 @@ void Parser::parse(const std::string& text, SnippetStorage& snippets,
 	this->text = &text;
 	textPos = 0;
 	finishedText = false;
+
+	std::string accumulatedSnippet;
+	TermBag accumulatedBag;
 	while (!finishedText) {
 		nextSnippet();
 		TermBag bag = getTermBag();
 		if (bag.size() == 0) {
 			continue;
 		}
+		accumulatedSnippet += snippet;
+		accumulatedBag.insert(accumulatedBag.end(), bag.begin(), bag.end());
+		if (!finishedText && accumulatedBag.size() < minTermsInSnippet) {
+			accumulatedSnippet += text[textPos-1];
+			continue;
+		}
 
-		Snippet snipObj = Snippet(snippet, bag);
+		Snippet snipObj = Snippet(accumulatedSnippet, accumulatedBag);
 		snippets.push_back(snipObj);
 
-		TermSet set(bag.begin(), bag.end());
+		TermSet set(accumulatedBag.begin(), accumulatedBag.end());
 		const SnippetTermFrequency& TF = snipObj.getTF();
 		for (Term term : set) {
 			auto termData = terms.find(term);
@@ -144,6 +154,9 @@ void Parser::parse(const std::string& text, SnippetStorage& snippets,
 			}
 			termData->second.addSnippet(snippets.size()-1, TF.getTF(term));
 		}
+
+		accumulatedBag.clear();
+		accumulatedSnippet.clear();
 	}
 
 	for (auto& termPair : terms) {

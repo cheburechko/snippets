@@ -2,6 +2,8 @@
 #include <iostream>
 #include <fstream>
 
+const unsigned minTermsInSnippet = 15;
+
 int main(int argc, char* argv[]) {
 	if (argc < 2) {
 		std::cerr << "Filename is required as first argument\n";
@@ -25,7 +27,7 @@ int main(int argc, char* argv[]) {
 
 	snippets::TermDatabase terms;
 	snippets::SnippetStorage snippets;
-	snippets::Parser parser;
+	snippets::Parser parser(minTermsInSnippet);
 	parser.parse(text, snippets, terms);
 
 #ifdef DEBUG

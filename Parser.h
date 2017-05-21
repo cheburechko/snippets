@@ -20,6 +20,7 @@ private:
 	std::string snippet;
 	Term term;
 	bool finishedText, finishedSnippet;
+	unsigned minTermsInSnippet;
 
 	void nextSnippet();
 	void nextTerm();
@@ -29,7 +30,7 @@ private:
 
 	static const std::unordered_set<char> sentenceEnds, delimiters;
 public:
-	Parser();
+	Parser(unsigned minTermsInSnippet = 15);
 
 	TermBag getTermBag(std::string snippet);
 	TermSet getTermSet(std::string snippet);
