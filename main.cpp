@@ -3,6 +3,7 @@
 #include <fstream>
 
 const unsigned minTermsInSnippet = 15;
+const bool useMostMatches = true;
 
 int main(int argc, char* argv[]) {
 	if (argc < 2) {
@@ -51,7 +52,7 @@ int main(int argc, char* argv[]) {
 	snipOutput.close();
 #endif
 	std::cout << "Preprocessing finished." << std::endl;
-	snippets::SnippetEngine engine(snippets, terms);
+	snippets::SnippetEngine engine(snippets, terms, useMostMatches);
 	std::string query;
 	std::cout << "Input query: ";
 	while (std::getline(std::cin, query)) {

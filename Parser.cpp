@@ -10,7 +10,7 @@
 
 namespace snippets {
 
-const std::regex Parser::sentenceRegex("[^.!?]+[.!?]*");
+const std::regex Parser::sentenceRegex("[^.!?]+[[:punct:][:space:]]*");
 
 const std::regex Parser::termRegex("[^[:punct:][:space:]]+");
 

@@ -32,6 +32,7 @@ private:
 	double bestScore, bestPossibleScore;
 	std::string bestSnippet;
 	std::multimap<double, unsigned, std::greater<double>> termRank;
+	bool useMostMatches;
 
 	void prepareQuery(const std::string& query);
 	void calculateBestPossibleScore();
@@ -39,7 +40,7 @@ private:
 	void rankNextSnippet();
 	bool isSnippetValid(unsigned snippetID);
 public:
-	SnippetEngine(SnippetStorage& snippets, TermDatabase& terms);
+	SnippetEngine(SnippetStorage& snippets, TermDatabase& terms, bool useMostMatches = true);
 	Result getSnippet(const std::string& query);
 	virtual ~SnippetEngine();
 };

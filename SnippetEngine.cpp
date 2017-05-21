@@ -11,14 +11,15 @@
 
 namespace snippets {
 
-SnippetEngine::SnippetEngine(SnippetStorage& snippets, TermDatabase& terms) :
+SnippetEngine::SnippetEngine(SnippetStorage& snippets, TermDatabase& terms, bool useMostMatches) :
 	snippets(snippets),
 	terms(terms),
 	bestPossibleScore(0),
 	bestScore(0),
 	analyzedSnippets(snippets.size()),
 	snippetsWithMostMatches(snippets.size()),
-	queryCounter(0)
+	queryCounter(0),
+	useMostMatches(useMostMatches)
 {
 }
 
@@ -58,18 +59,22 @@ void SnippetEngine::prepareQuery(const std::string& query) {
 		if (termData == terms.end()) {
 			continue;
 		}
-		for (auto it = termData->second.begin(); it != termData->second.end(); it++) {
-			snippetMatchCount[it->second]++;
-			maxTermCount = std::max(maxTermCount, snippetMatchCount[it->second]);
+		if (useMostMatches) {
+			for (auto it = termData->second.begin(); it != termData->second.end(); it++) {
+				snippetMatchCount[it->second]++;
+				maxTermCount = std::max(maxTermCount, snippetMatchCount[it->second]);
+			}
 		}
 
 		queryTermData.push_back(termData->second.begin());
 		queryTermDataEnds.push_back(termData->second.end());
 	}
 
-	for (auto& snipMatchCount : snippetMatchCount) {
-		if (snipMatchCount.second == maxTermCount) {
-			snippetsWithMostMatches[snipMatchCount.first] = queryCounter;
+	if (useMostMatches) {
+		for (auto& snipMatchCount : snippetMatchCount) {
+			if (snipMatchCount.second == maxTermCount) {
+				snippetsWithMostMatches[snipMatchCount.first] = queryCounter;
+			}
 		}
 	}
 
@@ -125,7 +130,7 @@ void SnippetEngine::selectNextBextTerm() {
 
 bool SnippetEngine::isSnippetValid(unsigned snippetID) {
 	return analyzedSnippets[snippetID] != queryCounter &&
-		   snippetsWithMostMatches[snippetID] == queryCounter;
+		   (!useMostMatches || snippetsWithMostMatches[snippetID] == queryCounter);
 }
 
 SnippetEngine::~SnippetEngine() {
