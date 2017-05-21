@@ -21,6 +21,7 @@ private:
 	struct Result {
 		std::string snippet;
 		long time;
+		double score;
 	};
 
 	std::vector<TermData::iterator> queryTermData, queryTermDataEnds;

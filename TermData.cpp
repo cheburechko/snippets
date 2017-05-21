@@ -26,7 +26,6 @@ void TermData::calculateScore(unsigned totalSnippets) {
 	for (auto pair : snippetsTF) {
 		snippetsByScore.emplace(pair.second*IDF, pair.first);
 	}
-
 }
 
 TermData::iterator TermData::begin() const {

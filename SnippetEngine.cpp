@@ -31,10 +31,13 @@ SnippetEngine::Result SnippetEngine::getSnippet(const std::string& query) {
 		selectNextBextTerm();
 	}
 
+
+
 	high_resolution_clock::time_point t2 = high_resolution_clock::now();
 	microseconds time_span = duration_cast<microseconds>(t2 - t1);
 	result.time = time_span.count();
 	result.snippet = bestSnippet;
+	result.score = bestScore;
 	return result;
 }
 
@@ -42,6 +45,7 @@ void SnippetEngine::prepareQuery(const std::string& query) {
 	queryTerms = parser.getTermSet(query);
 	queryTermData.clear();
 	queryTermDataEnds.clear();
+	analyzedSnippets.clear();
 
 	for (Term term : queryTerms) {
 		auto termData = terms.find(term);

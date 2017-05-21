@@ -6,6 +6,7 @@
  */
 
 #include "Parser.h"
+#include <algorithm>
 
 namespace snippets {
 
@@ -14,9 +15,9 @@ const std::unordered_set<char> Parser::sentenceEnds = {
 };
 
 const std::unordered_set<char> Parser::delimiters = {
-		'\"', '#', '$', '%', '&', '\'', '(', ')', '*', '+',
-		',', '/', ':', ';', '<', '>', '=', '@', '[', ']',
-		'^', '\`', '{', '}', '|', '~', ' ', '\t', '\r', '\n'
+		'\"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', '-',
+		',', '/', ':', ';', '<', '>', '=', '[', ']',
+		'^', '\`', '{', '}', '|', '~', ' ', '\t', '\r', '\n', '.', '!', '?'
 };
 
 Parser::Parser() :
@@ -52,7 +53,7 @@ void Parser::nextSnippet() {
 			lookingForSnippetEnd = true;
 		} else if (
 			lookingForSnippetEnd &&
-			sentenceEnds.find((*text)[nextPos]) != sentenceEnds.end()
+			sentenceEnds.find((*text)[nextPos]) == sentenceEnds.end()
 		) {
 			lookingForSnippetEnd = false;
 			break;
@@ -60,7 +61,7 @@ void Parser::nextSnippet() {
 	}
 	finishedText = nextPos == text->size();
 	initSnippet(text->substr(textPos, nextPos-textPos));
-	textPos = nextPos;
+	textPos = nextPos+1;
 }
 
 
@@ -77,15 +78,15 @@ void Parser::nextTerm() {
 			lookingForDelimeterEnd &&
 			delimiters.find(snippet[nextPos]) == delimiters.end()
 		) {
-			lookingForDelimeterEnd = false;
 			break;
 		}
 	}
-	if (lookingForDelimeterEnd) {
+	if (!lookingForDelimeterEnd) {
 		termLength = nextPos-snippetPos;
 	}
 	finishedSnippet = nextPos >= snippet.size();
 	term = snippet.substr(snippetPos, termLength);
+	std::transform(term.begin(), term.end(), term.begin(), ::tolower);
 	snippetPos = nextPos;
 }
 
@@ -94,7 +95,7 @@ TermBag Parser::getTermBag() {
 	TermBag result;
 	while (!finishedSnippet) {
 		nextTerm();
-		if (term != "") {
+		if (term.size() > 0) {
 			result.push_back(term);
 		}
 	}
@@ -112,7 +113,7 @@ TermSet Parser::getTermSet(std::string snippet) {
 	initSnippet(snippet);
 	while (!finishedSnippet) {
 		nextTerm();
-		if (term != "") {
+		if (term.size() > 0) {
 			result.emplace(term);
 		}
 	}
@@ -145,11 +146,11 @@ void Parser::parse(const std::string& text, SnippetStorage& snippets,
 		}
 	}
 
-	for (auto termPair : terms) {
+	for (auto& termPair : terms) {
 		termPair.second.calculateScore(snippets.size());
 	}
 
-	for (auto snipObj : snippets) {
+	for (auto& snipObj : snippets) {
 		snipObj.getTF().applyIDF(terms);
 	}
 }

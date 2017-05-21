@@ -11,15 +11,13 @@ namespace snippets {
 
 SnippetTermFrequency::SnippetTermFrequency(const TermBag& bag) {
 	total = bag.size();
+	double step = 1. / total;
 	for (Term term : bag) {
 		if (rawTF.find(term) != rawTF.end()) {
-			rawTF[term]++;
+			rawTF[term] += step;
 		} else {
-			rawTF[term] = 1;
+			rawTF[term] = step;
 		}
-	}
-	for (auto x : rawTF) {
-		x.second /= total;
 	}
 }
 

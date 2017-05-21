@@ -43,20 +43,22 @@ int main(int argc, char* argv[]) {
 	std::ofstream snipOutput("snippets.txt");
 	if (snipOutput) {
 		for (auto snip : snippets) {
-			termsOutput << snip.getSnippet() << "\n========\n";
+			snipOutput << snip.getSnippet() << "\n========\n";
 		}
 	}
 	snipOutput.close();
 #endif
-	std::cout << "Preprocessing finished.";
+	std::cout << "Preprocessing finished." << std::endl;
 	snippets::SnippetEngine engine(snippets, terms);
 	std::string query;
+	std::cout << "Input query: ";
 	while (std::getline(std::cin, query)) {
-		std::cout << "Input next query: ";
 		auto result = engine.getSnippet(query);
 		std::cout << "Query: " << query << std::endl
 				  << "Snippet: " << result.snippet << std::endl
+				  << "Score: " << result.score << std::endl
 				  << "Time (us): " << result.time << std::endl
-				  << "==========================================" << std::endl;
+				  << "==========================================" << std::endl
+				  << "Input next query: ";
 	}
 }
