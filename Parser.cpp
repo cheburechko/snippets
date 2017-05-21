@@ -10,135 +10,66 @@
 
 namespace snippets {
 
-const std::unordered_set<char> Parser::sentenceEnds = {
-		'.','!','?'
-};
+const std::regex Parser::sentenceRegex("[^.!?]+[.!?]*");
 
-const std::unordered_set<char> Parser::delimiters = {
-		'\"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', '-',
-		',', '/', ':', ';', '<', '>', '=', '[', ']',
-		'^', '\`', '{', '}', '|', '~', ' ', '\t', '\r', '\n', '.', '!', '?'
-};
+const std::regex Parser::termRegex("[^[:punct:][:space:]]+");
 
 Parser::Parser(unsigned minTermsInSnippet) :
-	textPos(0),
-	snippetPos(0),
-	snippet(""),
-	term(""),
-	finishedSnippet(false),
-	finishedText(false),
-	text(nullptr),
 	minTermsInSnippet(minTermsInSnippet)
 {
 }
 
-
-void Parser::initSnippet(const std::string& snippet) {
-	this -> snippet = snippet;
-	finishedSnippet = false;
-	for (snippetPos = 0; snippetPos <= snippet.size(); snippetPos++) {
-		if (delimiters.find(snippet[snippetPos]) == delimiters.end()) {
-			break;
-		}
-	}
+void lower(std::string& inp) {
+	std::transform(inp.begin(), inp.end(), inp.begin(), ::tolower);
 }
 
-
-void Parser::nextSnippet() {
-	int nextPos = textPos;
-	bool lookingForSnippetEnd = false;
-	for (; nextPos < text->size(); nextPos++) {
-		// Look for [.?!], then take into account '...|?!'
-		if (!lookingForSnippetEnd &&
-			sentenceEnds.find((*text)[nextPos]) != sentenceEnds.end()) {
-			lookingForSnippetEnd = true;
-		} else if (
-			lookingForSnippetEnd &&
-			sentenceEnds.find((*text)[nextPos]) == sentenceEnds.end()
-		) {
-			lookingForSnippetEnd = false;
-			break;
-		}
-	}
-	finishedText = nextPos == text->size();
-	initSnippet(text->substr(textPos, nextPos-textPos));
-	textPos = nextPos+1;
-}
-
-
-void Parser::nextTerm() {
-	int nextPos = snippetPos;
-	int termLength = 0;
-	bool lookingForDelimeterEnd = false;
-	for (; nextPos < snippet.size(); nextPos++) {
-		if (!lookingForDelimeterEnd &&
-			delimiters.find(snippet[nextPos]) != delimiters.end()) {
-			lookingForDelimeterEnd = true;
-			termLength = nextPos-snippetPos;
-		} else if (
-			lookingForDelimeterEnd &&
-			delimiters.find(snippet[nextPos]) == delimiters.end()
-		) {
-			break;
-		}
-	}
-	if (!lookingForDelimeterEnd) {
-		termLength = nextPos-snippetPos;
-	}
-	finishedSnippet = nextPos >= snippet.size();
-	term = snippet.substr(snippetPos, termLength);
-	std::transform(term.begin(), term.end(), term.begin(), ::tolower);
-	snippetPos = nextPos;
-}
-
-
-TermBag Parser::getTermBag() {
+TermBag Parser::getTermBag(std::string snippet) {
 	TermBag result;
-	while (!finishedSnippet) {
-		nextTerm();
-		if (term.size() > 0) {
-			result.push_back(term);
-		}
+	auto terms_begin = std::sregex_iterator(snippet.cbegin(), snippet.cend(), termRegex);
+	auto term_end = std::sregex_iterator();
+	for (std::sregex_iterator term = terms_begin;
+		 term != term_end;
+		 ++term
+	) {
+		result.push_back(term->str());
 	}
 	return result;
 }
 
-
-TermBag Parser::getTermBag(std::string snippet) {
-	initSnippet(snippet);
-	return getTermBag();
-}
-
 TermSet Parser::getTermSet(std::string snippet) {
 	TermSet result;
-	initSnippet(snippet);
-	while (!finishedSnippet) {
-		nextTerm();
-		if (term.size() > 0) {
-			result.emplace(term);
-		}
+	auto terms_begin = std::sregex_iterator(snippet.cbegin(), snippet.cend(), termRegex);
+	auto term_end = std::sregex_iterator();
+	for (std::sregex_iterator term = terms_begin;
+		 term != term_end;
+		 ++term
+	) {
+		result.emplace(term->str());
 	}
 	return result;
 }
 
 void Parser::parse(const std::string& text, SnippetStorage& snippets,
 		TermDatabase& terms) {
-	this->text = &text;
-	textPos = 0;
-	finishedText = false;
-
 	std::string accumulatedSnippet;
 	TermBag accumulatedBag;
-	while (!finishedText) {
-		nextSnippet();
-		TermBag bag = getTermBag();
+
+	auto sentences_begin = std::sregex_iterator(text.cbegin(), text.cend(), sentenceRegex);
+	auto sentences_end = std::sregex_iterator();
+
+	for (std::sregex_iterator sentence = sentences_begin;
+		 sentence != sentences_end;
+		 ++sentence
+	) {
+		std::string snippet = sentence->str();
+
+		TermBag bag = getTermBag(snippet);
 		if (bag.size() == 0) {
 			continue;
 		}
 		accumulatedSnippet += snippet;
 		accumulatedBag.insert(accumulatedBag.end(), bag.begin(), bag.end());
-		if (!finishedText && accumulatedBag.size() < minTermsInSnippet) {
-			accumulatedSnippet += text[textPos-1];
+		if (accumulatedBag.size() < minTermsInSnippet) {
 			continue;
 		}
 

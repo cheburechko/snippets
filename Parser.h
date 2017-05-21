@@ -10,25 +10,15 @@
 
 #include "Snippet.h"
 #include "TermData.h"
+#include <regex>
 
 namespace snippets {
 
 class Parser {
 private:
-	int textPos, snippetPos;
-	const std::string * text;
-	std::string snippet;
-	Term term;
-	bool finishedText, finishedSnippet;
 	unsigned minTermsInSnippet;
 
-	void nextSnippet();
-	void nextTerm();
-
-	void initSnippet(const std::string& snippet);
-	TermBag getTermBag();
-
-	static const std::unordered_set<char> sentenceEnds, delimiters;
+	static const std::regex sentenceRegex, termRegex;
 public:
 	Parser(unsigned minTermsInSnippet = 15);
 
