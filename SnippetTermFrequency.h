@@ -10,6 +10,7 @@
 
 #include <unordered_map>
 #include "term.h"
+#include "TermData.h"
 
 namespace snippets {
 

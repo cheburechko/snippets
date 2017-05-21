@@ -61,7 +61,7 @@ void SnippetEngine::calculateBestPossibleScore() {
 	for (unsigned i = 0; i < queryTermData.size(); i++) {
 		TermData::iterator& termData = queryTermData[i];
 		bestPossibleScore += termData->first;
-		termRank.emplace(termData->first, termData);
+		termRank.emplace(termData->first, i);
 	}
 }
 

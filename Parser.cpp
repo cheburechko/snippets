@@ -9,11 +9,11 @@
 
 namespace snippets {
 
-Parser::sentenceEnds = {
+const std::unordered_set<char> Parser::sentenceEnds = {
 		'.','!','?'
 };
 
-Parser::delimiters = {
+const std::unordered_set<char> Parser::delimiters = {
 		'\"', '#', '$', '%', '&', '\'', '(', ')', '*', '+',
 		',', '/', ':', ';', '<', '>', '=', '@', '[', ']',
 		'^', '\`', '{', '}', '|', '~', ' ', '\t', '\r', '\n'
@@ -134,12 +134,12 @@ void Parser::parse(const std::string& text, SnippetStorage& snippets,
 		Snippet snipObj = Snippet(snippet, bag);
 		snippets.push_back(snipObj);
 
-		TermSet set(bag);
+		TermSet set(bag.begin(), bag.end());
 		const SnippetTermFrequency& TF = snipObj.getTF();
 		for (Term term : set) {
 			auto termData = terms.find(term);
 			if (termData == terms.end()) {
-				termData = terms.emplace(term, TermData(term));
+				termData = terms.emplace(term, TermData(term)).first;
 			}
 			termData->second.addSnippet(snippets.size()-1, TF.getTF(term));
 		}
