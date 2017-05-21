@@ -32,7 +32,6 @@ SnippetEngine::Result SnippetEngine::getSnippet(const std::string& query) {
 	}
 
 
-
 	high_resolution_clock::time_point t2 = high_resolution_clock::now();
 	microseconds time_span = duration_cast<microseconds>(t2 - t1);
 	result.time = time_span.count();
@@ -47,14 +46,30 @@ void SnippetEngine::prepareQuery(const std::string& query) {
 	queryTermDataEnds.clear();
 	analyzedSnippets.clear();
 
+	std::unordered_map<unsigned, unsigned> snippetMatchCount;
+	unsigned maxTermCount = 0;
+
 	for (Term term : queryTerms) {
 		auto termData = terms.find(term);
 		if (termData == terms.end()) {
 			continue;
 		}
+		for (auto it = termData->second.begin(); it != termData->second.end(); it++) {
+			snippetMatchCount[it->second]++;
+			maxTermCount = std::max(maxTermCount, snippetMatchCount[it->second]);
+		}
+
 		queryTermData.push_back(termData->second.begin());
 		queryTermDataEnds.push_back(termData->second.end());
 	}
+
+	snippetsWithMostMatches.clear();
+	for (auto snipMatchCounts: snippetMatchCount) {
+		if (snipMatchCounts.second == maxTermCount) {
+			snippetsWithMostMatches.emplace(snipMatchCounts.first);
+		}
+	}
+
 	bestScore = 0;
 	bestSnippet = "!!! Query had no matches. !!!";
 }
@@ -71,7 +86,7 @@ void SnippetEngine::calculateBestPossibleScore() {
 
 void SnippetEngine::rankNextSnippet() {
 	unsigned snippetID = queryTermData[termRank.begin()->second]->second;
-	if (analyzedSnippets.find(snippetID) != analyzedSnippets.end()) {
+	if (!isSnippetValid(snippetID)) {
 		return;
 	}
 	Snippet& snippet = snippets.at(snippetID);
@@ -93,7 +108,7 @@ void SnippetEngine::selectNextBextTerm() {
 
 	while (
 		iter != queryTermDataEnds[termID] &&
-		analyzedSnippets.find(iter->second) != analyzedSnippets.end()
+		!isSnippetValid(iter->second)
 	) {
 		iter++;
 	}
@@ -103,6 +118,11 @@ void SnippetEngine::selectNextBextTerm() {
 
 	termRank.emplace(iter->first, termID);
 	bestPossibleScore += iter->first;
+}
+
+bool SnippetEngine::isSnippetValid(unsigned snippetID) {
+	return analyzedSnippets.find(snippetID) == analyzedSnippets.end() &&
+			snippetsWithMostMatches.find(snippetID) != snippetsWithMostMatches.end();
 }
 
 SnippetEngine::~SnippetEngine() {

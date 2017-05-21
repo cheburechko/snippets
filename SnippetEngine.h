@@ -26,7 +26,7 @@ private:
 
 	std::vector<TermData::iterator> queryTermData, queryTermDataEnds;
 	TermSet queryTerms;
-	std::unordered_set<unsigned> analyzedSnippets;
+	std::unordered_set<unsigned> analyzedSnippets, snippetsWithMostMatches;
 	double bestScore, bestPossibleScore;
 	std::string bestSnippet;
 	std::multimap<double, unsigned, std::greater<double>> termRank;
@@ -35,6 +35,7 @@ private:
 	void calculateBestPossibleScore();
 	void selectNextBextTerm();
 	void rankNextSnippet();
+	bool isSnippetValid(unsigned snippetID);
 public:
 	SnippetEngine(SnippetStorage& snippets, TermDatabase& terms);
 	Result getSnippet(const std::string& query);
