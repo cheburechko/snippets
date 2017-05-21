@@ -4,14 +4,14 @@ CPPFLAGS := -std=c++11 -O2
 CXXFLAGS := 
 CXX := g++
 
+all : $(OBJ_FILES)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $^ -o main
+
 debug: CXXFLAGS += -DDEBUG -g
 debug: all
 
 %.o: %.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
 
-all : $(OBJ_FILES)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $^ -o main
-	
 clean :
-	rm $(OBJ_FILES)
+	rm $(OBJ_FILES) main
